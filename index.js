@@ -3,11 +3,18 @@ var Q = require("q");
 
 exports.promisify = function(repl) {
   var _eval = repl.eval;
-  repl.eval = function(cmd, context, filename, callback) {
-    Q.nfcall(_eval, cmd, context, filename).then(function(result) {
-      callback(null, result);
-    }, function(err) {
-      callback(err);
-    });
+  var that = this;
+  if (cmd[cmd.length-1] === '\n'){
+      //Command to be executed
+      Q.nfcall(_eval, cmd, context, filename).then(function() {
+          //Success callback
+          Array.prototype.unshift.call(arguments, false);
+          callback.apply(that, arguments);
+      }, function() {
+          callback.apply(that, arguments);
+      });
+  }else{
+      //Suggession
+      _eval.apply(that, arguments);
   }
 }
